@@ -1,0 +1,147 @@
+     1                                  bits 32
+     2                                  
+     3                                  global start        
+     4                                  
+     5                                  ; declare extern functions used by the programme
+     6                                  extern exit, printf, scanf ; add printf and scanf as extern functions            
+     7                                  import exit msvcrt.dll    
+     8                                  import printf msvcrt.dll    ; tell the assembler that function printf is found in msvcrt.dll library
+     9                                  import scanf msvcrt.dll     ; similar for scanf
+    10                                                            
+    11                                  segment data use32 class=data
+    12 00000000 00000000                	n dd  0       ; in this variable we'll store the value read from the keyboard
+    13 00000004 00000000                    element dd 0
+    14 00000008 00000000<rept>              sir_numere times 100 dd 0
+    15                                      
+    16                                      ; char strings are of type byte
+    17 00000198 456E74657220746865-     	message  db "Enter the number of elemnets ", 0 
+    17 000001A1 206E756D626572206F-
+    17 000001AA 6620656C656D6E6574-
+    17 000001B3 732000             
+    18 000001B6 4C697374206F662070-         message1 db "List of prime numbers:", 0ah, 0
+    18 000001BF 72696D65206E756D62-
+    18 000001C8 6572733A0A00       
+    19 000001CE 456C656D656E74206E-         element_enter db "Element number %d-> ", 0
+    19 000001D7 756D6265722025642D-
+    19 000001E0 3E2000             
+    20 000001E3 256400                  	format  db "%d", 0  ; %d <=> a decimal number (base 10)
+    21 000001E6 25640A00                    format1  db "%d", 0ah ,0
+    22                                      
+    23                                  segment code use32 class=code
+    24                                      prime:
+    25 00000000 8B442404                        mov EAX, [ESP + 4]
+    26 00000004 89C1                            mov ECX, EAX
+    27 00000006 83F801                          cmp eax, 1
+    28 00000009 7426                            je not_prime
+    29 0000000B 83F802                          cmp eax, 2
+    30 0000000E 741A                            je is_prime
+    31                                          
+    32 00000010 89C1                            mov ECX, EAX
+    33 00000012 BB02000000                      mov EBX, 2  ; Initial divisor
+    34                                          check_divisor:
+    35 00000017 BA00000000                          mov EDX, 0
+    36 0000001C F7F3                                div EBX
+    37 0000001E 83FA00                              cmp EDX, 0
+    38 00000021 740E                                je not_prime  ; If remainder is 0, it's not prime
+    39 00000023 89C8                                mov EAX, ECX
+    40                                              
+    41 00000025 43                                  inc EBX
+    42 00000026 39C3                                cmp EBX, EAX
+    43 00000028 72ED                                jb check_divisor
+    44                                  
+    45                                          is_prime:
+    46 0000002A B801000000                          mov eax, 1
+    47 0000002F EB07                                jmp done
+    48                                  
+    49                                          not_prime:
+    50 00000031 B800000000                          mov eax, 0
+    51 00000036 EB00                                jmp done
+    52                                  
+    53                                          done:
+    54 00000038 C20400                          ret 4
+    55                                      
+    56                                      start: 
+    57                                          ; push dword message 
+    58 0000003B 68[98010000]                    push dword message
+    59 00000040 FF15[00000000]                  call [printf]   
+    60 00000046 83C404                          add esp, 4*1    
+    61                                                                                     
+    62 00000049 68[00000000]                    push dword n    
+    63 0000004E 68[E3010000]                    push dword format
+    64 00000053 FF15[00000000]                  call [scanf]      
+    65 00000059 83C408                          add esp, 4 * 2   
+    66                                          
+    67                                          ;loop for reading numbers
+    68 0000005C 8B0D[00000000]                  mov ECX, dword[n]
+    69 00000062 BE00000000                      mov ESI, 0
+    70 00000067 E335                            jecxz end_loop
+    71                                          read_loop:
+    72 00000069 51                                  push ECX
+    73 0000006A 56                                  push ESI
+    74                                              
+    75 0000006B 56                                  push dword ESI
+    76 0000006C 68[CE010000]                        push dword element_enter
+    77 00000071 FF15[00000000]                      call [printf]
+    78 00000077 83C408                              add ESP, 4 * 2
+    79                                              
+    80 0000007A 68[04000000]                        push dword element
+    81 0000007F 68[E3010000]                        push dword format
+    82 00000084 FF15[00000000]                      call [scanf]
+    83 0000008A 83C408                              add ESP, 4 * 2
+    84 0000008D A1[04000000]                        mov EAX, dword[element]
+    85                                              
+    86 00000092 5E                                  pop ESI
+    87 00000093 8904B5[08000000]                    mov [sir_numere + 4*ESI], EAX
+    88 0000009A 59                                  pop ECX
+    89                                              
+    90 0000009B 46                                  inc ESI
+    91 0000009C E2CB                                loop read_loop
+    92                                          end_loop:
+    93                                          
+    94 0000009E 68[B6010000]                    push dword message1
+    95 000000A3 FF15[00000000]                  call [printf]   
+    96 000000A9 83C404                          add esp, 4*1
+    97                                          
+    98 000000AC 8B0D[00000000]                  mov ECX, dword[n]
+    99 000000B2 BE00000000                      mov ESI, 0
+   100 000000B7 E343                            jecxz end_loop1
+   101                                          prime_loop:   
+   102 000000B9 51                                  push ECX
+   103 000000BA 56                                  push ESI
+   104                                              
+   105 000000BB 8B04B5[08000000]                    mov EAX, dword[sir_numere + 4*ESi]
+   106 000000C2 50                                  push dword EAX
+   107 000000C3 E838FFFFFF                          call prime
+   108                                              
+   109 000000C8 5E                                  pop ESI
+   110 000000C9 56                                  push ESI
+   111 000000CA 83F801                              cmp EAX, 1
+   112 000000CD 7528                                jne no_print
+   113                                              
+   114                                              print:
+   115 000000CF 5E                                      pop ESI
+   116 000000D0 56                                      push ESI
+   117 000000D1 56                                      push dword ESI
+   118 000000D2 68[CE010000]                            push dword element_enter
+   119 000000D7 FF15[00000000]                          call [printf]
+   120 000000DD 83C408                                  add ESP, 4 * 2
+   121                                                  
+   122 000000E0 5E                                      pop ESI
+   123 000000E1 56                                      push ESI
+   124 000000E2 FF34B5[08000000]                        push dword [sir_numere + 4*ESi]
+   125 000000E9 68[E6010000]                            push dword format1
+   126 000000EE FF15[00000000]                          call [printf]
+   127 000000F4 83C408                                  add ESP, 4 * 2
+   128                                                  
+   129                                              no_print:
+   130                                              
+   131 000000F7 5E                                  pop ESI
+   132 000000F8 59                                  pop ECX
+   133 000000F9 46                                  inc ESI
+   134 000000FA E2BD                                loop prime_loop
+   135                                          end_loop1:
+   136                                          
+   137                                          
+   138                                          ; exit(0)
+   139 000000FC 6A00                            push dword 0      ; place on stack parameter for exit
+   140 000000FE FF15[00000000]                  call [exit]       ; call exit to terminate the program

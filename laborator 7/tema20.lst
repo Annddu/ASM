@@ -1,0 +1,79 @@
+     1                                  bits 32
+     2                                  
+     3                                  ; Read two doublewords a and b in base 16 from the keyboard. 
+     4                                  ; Display the sum of the low parts of the two numbers and the difference between the high parts of the two numbers in base ;  Example:
+     5                                  ; a = 00101A35h
+     6                                  ; b = 00023219h
+     7                                  ; sum = 4C4Eh
+     8                                  ; difference = Eh
+     9                                  
+    10                                  global start        
+    11                                  
+    12                                  ; declare extern functions used by the programme
+    13                                  extern exit, printf, scanf ; add printf and scanf as extern functions            
+    14                                  import exit msvcrt.dll    
+    15                                  import printf msvcrt.dll    ; tell the assembler that function printf is found in msvcrt.dll library
+    16                                  import scanf msvcrt.dll     ; similar for scanf
+    17                                                            
+    18                                  segment data use32 class=data
+    19 00000000 00000000                	a dd 0       
+    20 00000004 00000000                    b dd 0
+    21 00000008 61203D2000              	message_a db "a = ", 0 
+    22 0000000D 62203D2000                  message_b db "b = ", 0
+    23 00000012 257800                      format db "%x", 0
+    24 00000015 73756D203D20257868-     	format_sum db "sum = %xh ", 0ah, 0  
+    24 0000001E 200A00             
+    25 00000021 646966666572656E63-         format_difference db "difference = %xh", 0
+    25 0000002A 65203D2025786800   
+    26                                      
+    27                                  segment code use32 class=code
+    28                                      start:
+    29                                         
+    30                                          ;citim a
+    31 00000000 68[08000000]                    push dword message_a 
+    32 00000005 FF15[00000000]                  call [printf]      
+    33 0000000B 83C404                          add esp, 4*1
+    34                                          
+    35 0000000E 68[00000000]                    push dword a
+    36 00000013 68[12000000]                    push dword format
+    37 00000018 FF15[00000000]                  call [scanf]
+    38 0000001E 83C408                          add esp, 4*2
+    39 00000021 8B15[00000000]                  mov edx, dword[a]        
+    40                                          
+    41                                          ;citim b
+    42 00000027 68[0D000000]                    push dword message_b
+    43 0000002C FF15[00000000]                  call [printf]      
+    44 00000032 83C404                          add esp, 4*1
+    45                                          
+    46 00000035 68[04000000]                    push dword b
+    47 0000003A 68[12000000]                    push dword format
+    48 0000003F FF15[00000000]                  call [scanf]
+    49 00000045 83C408                          add esp, 4*2
+    50 00000048 8B1D[04000000]                  mov ebx, dword[b]
+    51                                          
+    52                                          ;facem suma low
+    53 0000004E 66A1[00000000]                  mov ax, word[a]
+    54 00000054 668B1D[04000000]                mov bx, word[b]
+    55 0000005B 6601D8                          add ax, bx
+    56 0000005E 83D000                          adc eax, 0
+    57                                          
+    58 00000061 50                              push dword eax
+    59 00000062 68[15000000]                    push dword format_sum
+    60 00000067 FF15[00000000]                  call [printf]
+    61 0000006D 83C408                          add esp, 4*2
+    62                                          
+    63                                          ;facem diferenta high
+    64 00000070 66A1[02000000]                  mov ax, word[a+2]
+    65 00000076 668B1D[06000000]                mov bx, word[b+2]
+    66 0000007D 6629D8                          sub ax, bx
+    67 00000080 83D800                          sbb eax, 0
+    68                                          
+    69                                          
+    70 00000083 50                              push dword eax
+    71 00000084 68[21000000]                    push dword format_difference
+    72 00000089 FF15[00000000]                  call [printf]
+    73 0000008F 83C408                          add esp, 4*2
+    74                                          
+    75                                          ; exit(0)
+    76 00000092 6A00                            push dword 0      ; place on stack parameter for exit
+    77 00000094 FF15[00000000]                  call [exit]       ; call exit to terminate the program

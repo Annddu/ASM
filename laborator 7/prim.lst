@@ -1,0 +1,46 @@
+     1                                  bits 32
+     2                                  segment code use32 public code
+     3                                  global start        
+     4                                  
+     5                                  ; declare extern functions used by the programme
+     6                                  extern exit, printf, scanf ; add printf and scanf as extern functions            
+     7                                  import exit msvcrt.dll    
+     8                                  import printf msvcrt.dll    ; tell the assembler that function printf is found in msvcrt.dll library
+     9                                  import scanf msvcrt.dll     ; similar for scanf
+    10                                                            
+    11                                  segment data use32 class=data
+    12 00000000 0D000000                	n dd 13
+    13                                      
+    14                                  segment code use32 class=code
+    15                                      start:
+    16 00000000 A1[00000000]                    mov EAX, dword[n]
+    17 00000005 89C1                            mov ECX, EAX
+    18 00000007 83F801                          cmp eax, 1
+    19 0000000A 7426                            je not_prime
+    20 0000000C 83F802                          cmp eax, 2
+    21 0000000F 741A                            je is_prime
+    22                                          
+    23 00000011 89C1                            mov ECX, EAX
+    24 00000013 BB02000000                      mov EBX, 2  ; Initial divisor
+    25                                          check_divisor:
+    26 00000018 BA00000000                          mov EDX, 0
+    27 0000001D F7F3                                div EBX
+    28 0000001F 83FA00                              cmp EDX, 0
+    29 00000022 740E                                je not_prime  ; If remainder is 0, it's not prime
+    30 00000024 89C8                                mov EAX, ECX
+    31                                              
+    32 00000026 43                                  inc EBX
+    33 00000027 39C3                                cmp EBX, EAX
+    34 00000029 72ED                                jb check_divisor
+    35                                  
+    36                                          is_prime:
+    37 0000002B B801000000                          mov eax, 1
+    38 00000030 EB07                                jmp done
+    39                                  
+    40                                          not_prime:
+    41 00000032 B800000000                          mov eax, 0
+    42 00000037 EB00                                jmp done
+    43                                  
+    44                                          done:
+    45 00000039 6A00                            push dword 0      ; place on stack parameter for exit
+    46 0000003B FF15[00000000]                  call [exit]       ; call exit to terminate the program

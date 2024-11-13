@@ -1,0 +1,55 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     4                                  global start        
+     5                                  
+     6                                  ; declare external functions needed by our program
+     7                                  extern exit               ; tell nasm that exit exists even if we won't be defining it
+     8                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+     9                                                            ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    10                                  
+    11                                  ; our data is declared here (the variables needed by our program)
+    12                                  segment data use32 class=data
+    13                                      ; ...
+    14 00000000 FFFF                        a dw 1111111111111111b
+    15 00000002 FFFF                        b dw 1111111111111111b
+    16 00000004 00000000                    c dd 00000000h
+    17                                      
+    18                                  
+    19                                  ; our code starts here
+    20                                  segment code use32 class=code
+    21                                      start:
+    22                                          ; Given the words A and B, compute the doubleword C as follows:
+    23                                          ; the bits 0-5 of C are the same as the bits 3-8 of A x 
+    24                                          ; the bits 6-8 of C are the same as the bits 2-4 of B x
+    25                                          ; the bits 9-15 of C are the same as the bits 6-12 of A
+    26                                          ; the bits 16-31 of C have the value 0
+    27 00000000 668B1D[00000000]                mov BX, word[a]
+    28 00000007 B103                            mov CL, 3
+    29 00000009 66D3EB                          shr BX, CL
+    30 0000000C 6683E33F                        and BX, 0000000000111111b
+    31 00000010 66091D[04000000]                or word[c], BX
+    32                                          
+    33 00000017 668B1D[02000000]                mov BX, word[b]
+    34 0000001E B102                            mov CL, 2
+    35 00000020 66D3EB                          shr BX, CL
+    36 00000023 6683E307                        and BX, 0000000000000111b
+    37 00000027 B106                            mov CL, 6
+    38 00000029 66D3E3                          shl BX, CL
+    39 0000002C 66091D[04000000]                or word[c], BX
+    40                                          
+    41 00000033 668B1D[00000000]                mov BX, word[a]
+    42 0000003A B106                            mov CL, 6
+    43 0000003C 66D3EB                          shr BX, CL
+    44 0000003F 6683E37F                        and BX, 0000000001111111b
+    45 00000043 B109                            mov CL, 9
+    46 00000045 66D3E3                          shl BX, CL
+    47 00000048 66091D[04000000]                or word[c], BX
+    48                                          
+    49 0000004F 830D[06000000]00                or dword[c+2], 0000000000000000b
+    50                                          
+    51 00000056 A1[04000000]                    mov eax, dword[c]
+    52                                          
+    53                                          ; exit(0)
+    54 0000005B 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    55 0000005D FF15[00000000]                  call    [exit]       ; call exit to terminate the program
